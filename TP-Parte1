@@ -1,0 +1,96 @@
+Parte 1 — TDA Pila
+
+1.1 Especificación
+
+Dominio: Pila de elementos de tipo T (colección con política LIFO: el
+último elemento apilado es el primero en desapilarse).
+
+Operaciones:
+
+crear: () → Pila
+  Post: devuelve una pila vacía.
+
+apilar: (p: Pila, x: T) → Pila
+  Pre: p no está llena (cantidad de elementos < capacidad máxima).
+  Post: devuelve una pila con x en el tope, y debajo los elementos de p
+  en el mismo orden que tenían en p.
+
+desapilar: (p: Pila) → Pila
+  Pre: p no es vacía.
+  Post: devuelve una pila con los mismos elementos de p, salvo el que
+  estaba en el tope, que se elimina. El orden relativo del resto no cambia.
+
+tope: (p: Pila) → T
+  Pre: p no es vacía.
+  Post: devuelve el elemento que está en el tope de p, sin modificar p.
+
+esVacia: (p: Pila) → boolean
+  Pre: ninguna.
+  Post: devuelve true si p no tiene elementos, false en caso contrario.
+
+(Nota: en la implementación en Java, "crear" se resuelve con el
+constructor de cada clase concreta, y apilar/desapilar modifican la
+pila en lugar de devolver una nueva, que es la forma habitual de
+implementar TDAs mutables en un lenguaje imperativo.)
+
+1.2 Implementación — complejidades y comparación
+
+| Operación  | Variante A (tope al final) | Variante B (tope en posición 0) |
+|------------|:---------------------------:|:---------------------------------:|
+| apilar     | O(1)                        | O(n)                              |
+| desapilar  | O(1)                        | O(n)                              |
+| tope       | O(1)                        | O(1)                              |
+
+¿Cuál conviene? La Variante A, sin excepción práctica: todas sus
+operaciones son O(1), mientras que en la Variante B apilar y desapilar
+son O(n) porque cada una requiere correr todos los demás elementos un
+lugar (a la derecha para insertar en la posición 0, a la izquierda
+para volver a dejar el nuevo tope en la posición 0).
+
+¿Depende de algo?  No depende del caso de uso: una pila, por
+definición, solo permite operar sobre el tope, y jamás se necesita
+acceso indexado a otras posiciones del arreglo. Mantener el tope fijo
+en la posición 0 (Variante B) no aporta ninguna ventaja para ese patrón
+de acceso y sólo agrega el costo de correr elementos en cada operación.
+La Variante B tendría sentido si, además de la interfaz de pila,
+necesitáramos acceso frecuente al fondo por índice fijo — algo que el
+TDA Pila no contempla.
+
+1.3 Utilización
+
+Todos los métodos de `Utilizacion.java` usan **exclusivamente** las
+operaciones de la interfaz `Pila` (`apilar`, `desapilar`, `tope`,
+`esVacia`), por lo que el mismo código funciona sin cambios con
+`PilaVarianteA` o `PilaVarianteB` (verificado en `Main.java`, que corre
+la misma batería de pruebas con ambas).
+
+1. pasarPila(origen, capacidad) — recursivo: desapila el tope de
+   `origen`, resuelve el problema para el resto (llamada recursiva) y
+   recién al volver de la recursión apila el elemento retenido. Este
+   "apilar al volver" es lo que preserva el orden original al pasar
+   todo a la nueva pila, y al consumir `origen` con `desapilar` esta
+   queda vacía como pide el enunciado.
+
+2. copiarPila(p, capacidad) — misma idea recursiva que pasarPila,
+   pero además, al volver de la recursión, se reapila el elemento en
+   `p` para dejarla exactamente como estaba, y también se apila en la
+   copia. Así `p` queda intacta y `copia` es idéntica a la original.
+
+3. invertirPila(p, capacidad) — primero saca una copia de `p` (sin
+   tocar `p`), y sobre esa copia aplica el algoritmo clásico de
+   inversión recursiva de una pila con dos funciones auxiliares:
+   `invertirEnLugar` (saca el tope, invierte el resto recursivamente, e
+   inserta el elemento retenido al fondo) e `insertarAlFondo` (inserta
+   recursivamente un elemento en el fondo de la pila). El resultado es
+   una pila nueva invertida, y `p` no se modifica.
+
+4. masDeUnaOcurrencia(p, capacidad) — trabaja sobre una copia de
+   `p` (por eso `p` nunca se altera). `tieneRepetidos` saca el tope,
+   pregunta si el resto lo `contiene` (búsqueda recursiva que restaura
+   la pila que recorre) o si el resto tiene repetidos entre sí, y
+   reapila el elemento para no perder el resto de la recursión.
+
+5. eliminarImpares(p, capacidad) — misma estructura recursiva que
+   pasarPila (para preservar el orden relativo), pero filtrando: al
+   volver de la recursión, sólo se apila el elemento si es par. Se
+   aplica sobre una copia de `p`, así que `p` no se modifica.
