@@ -1,0 +1,115 @@
+Parte 2 — TDA Cola
+
+2.1 Especificación
+
+Dominio: Cola de elementos de tipo T (colección con política FIFO:
+el primer elemento encolado es el primero en desencolarse).
+
+Operaciones:
+
+crear: () → Cola
+  Post: devuelve una cola vacía.
+
+encolar: (c: Cola, x: T) → Cola
+  Pre: c no está llena (cantidad de elementos < capacidad máxima).
+  Post: devuelve una cola con x agregado al final, y los elementos de
+  c en el mismo orden que tenían antes de encolar.
+
+desencolar: (c: Cola) → Cola
+  Pre: c no es vacía.
+  Post: devuelve una cola con los mismos elementos de c, salvo el que
+  estaba al frente, que se elimina. El orden relativo del resto no cambia.
+
+frente: (c: Cola) → T
+  Pre: c no es vacía.
+  Post: devuelve el elemento que está al frente de c, sin modificar c.
+
+esVacia: (c: Cola) → boolean**
+  Pre: ninguna.
+  Post: devuelve true si c no tiene elementos, false en caso contrario.
+
+2.2 Implementación — complejidades y comparación
+
+| Operación  | Variante A (lineal simple) | Variante B (circular) |
+|------------|:---------------------------:|:-----------------------:|
+| encolar    | O(1)                        | O(1)                    |
+| desencolar | O(1)                        | O(1)                    |
+
+En cuanto al tiempo, las dos variantes son O(1) en ambas
+operaciones: ninguna de las dos recorre ni corre elementos (a
+diferencia de lo que pasaba con la Pila Variante B del punto anterior).
+
+La diferencia está en el **uso del espacio a lo largo del tiempo**: en
+la Variante A, el frente y el fin sólo avanzan hacia adelante y nunca
+retroceden ni se reutilizan los lugares liberados. Esto significa que
+una cola a la que se le encola y desencola muchas veces puede llegar a
+reportarse "llena" (el fin llegó al final del arreglo) aunque en ese
+momento tenga muy pocos elementos reales o incluso esté vacía — el
+arreglo se va "gastando" con el uso. En la práctica esto se puede
+comprobar fácilmente encolando y desencolando repetidamente sobre una
+cola de capacidad chica.
+
+La Variante B evita completamente ese problema: al calcular las
+posiciones con aritmética modular, cualquier lugar liberado por un
+desencolar puede volver a usarse, así que una cola de capacidad N
+siempre puede llegar a contener hasta N elementos sin importar cuántas
+operaciones se hayan hecho antes.
+
+Conclusión: conviene usar la Variante B en la práctica. Ambas
+tienen el mismo costo temporal por operación, pero la Variante A tiene
+una limitación seria de uso del espacio que la hace poco práctica para
+cualquier cola de larga vida (por ejemplo, una cola que procesa tareas
+de forma continua).
+
+2.3 Utilización
+
+1. pasarCola(origen, capacidad) — a diferencia de lo que pasaba con
+   la Pila, acá no hace falta ningún truco para preservar el orden: como
+   la cola ya respeta el orden de llegada, alcanza con ir sacando el
+   frente de `origen` y encolarlo directamente en `destino`, en ese
+   mismo orden. Se implementó de forma recursiva (con un acumulador
+   `destino`), y `origen` queda vacía al terminar.
+
+2. invertirColaConPila(c, capacidad) — se vacía `c` volcando cada
+   elemento en una Pila auxiliar (esto invierte el orden, porque la
+   pila es LIFO), y después se vuelca la pila en una cola nueva. El
+   resultado queda invertido. Esta versión consume `c` en el proceso.
+
+3. invertirColaSinPila(c) — es el ejercicio clásico de invertir una
+   cola sin ninguna estructura auxiliar explícita: se saca el frente,
+   se invierte recursivamente el resto de la cola, y recién al volver
+   de la recursión se encola el elemento guardado. Como el encolado
+   ocurre "de vuelta" en la recursión, cada elemento termina en la
+   posición contraria a la que tenía, y el resultado es la cola
+   invertida en el lugar. Lo único que "guarda" los elementos
+   intermedios es la propia pila de llamadas recursivas, que es lo que
+   pide el enunciado (nada de Pila, arreglo ni otra Cola). El método
+   devuelve la misma cola recibida, ya invertida.
+
+4. finalCoincide(c1, c2, k, capacidad) — es el más elaborado. La
+   idea es extraer los últimos k elementos de cada cola sin perder el
+   resto:
+   - Se vuelca la cola entera en una Pila (esto la invierte: el tope
+     queda con el último elemento encolado, es decir, el más reciente).
+   - Se sacan los primeros k elementos del tope (los k más recientes) y
+     se guardan aparte, reponiéndolos de inmediato en la pila para no
+     perder el resto de los datos.
+   - Esos k elementos guardados quedan naturalmente en el orden
+     correcto (el más antiguo del grupo primero, el más nuevo al
+     final), así que arman directamente la cola de "últimos k" a
+     devolver.
+   - Para reconstruir la cola original a partir de la pila, se hace una
+     doble inversión: se vuelca la pila en una segunda pila (esto
+     la invierte por segunda vez) y esa segunda pila se vuelca en la
+     cola original — dos inversiones sucesivas devuelven el orden
+     original.
+   - Se hace este proceso para c1 y para c2 (cada una queda intacta al
+     terminar) y se comparan los dos resultados de "últimos k"
+     elemento por elemento.
+
+   Se asumió que si alguna de las dos colas tiene menos de k elementos
+   la respuesta es `false` (no puede haber coincidencia), y que con
+   k = 0 la respuesta es `true` por vacuidad (no hay nada que
+   comparar). Estas dos decisiones no estaban explícitas en el
+   enunciado; si el profesor espera otro comportamiento en esos casos
+   borde, es cuestión de ajustar esas dos líneas.
