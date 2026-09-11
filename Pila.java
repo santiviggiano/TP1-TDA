@@ -1,15 +1,12 @@
-public interface Pila {
 
-    void apilar(int elemento);
+public interface Pila<T> {
 
-    int desapilar();
-
-    int tope();
-
+    
+    void apilar(T elemento);
+    T desapilar();
+    T tope();
     boolean esVacia();
 
-    boolean esLlena();
-
+    
 }
-
 
